@@ -94,3 +94,8 @@
 &serial_3 {
 	status = "okay";
 };
+
+&extcon_usb {
+	pinctrl-0 = <&usb_vbus>;
+	status = "okay";
+};

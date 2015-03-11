@@ -135,6 +135,14 @@
 		       };
 		};
 	};
+
+	extcon_usb: extcon-usb {
+		compatible = "linux,extcon-usb-gpio";
+
+		pinctrl-names = "default";
+		vbus-gpio = <&gpx1 6 0>;
+		status = "disabled";
+	};
 };
 
 &bus_dmc {
@@ -210,6 +218,11 @@
 	hdmi_hpd: hdmi-hpd {
 		samsung,pins = "gpx3-7";
 		samsung,pin-pud = <EXYNOS_PIN_PULL_DOWN>;
+	};
+
+	usb_vbus: usb-vbus {
+		samsung,pins = "gpx1-6";
+		samsung,pin-pud = <0>;
 	};
 };
 
@@ -287,6 +300,7 @@
 	status = "okay";
 	vusb_d-supply = <&ldo15_reg>;
 	vusb_a-supply = <&ldo12_reg>;
+	extcon = <&extcon_usb>;
 };
 
 &i2c_0 {
