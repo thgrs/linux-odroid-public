@@ -82,6 +82,11 @@ struct drm_plane_state {
 	unsigned int zpos;
 	unsigned int normalized_zpos;
 
+	/* Plane blending */
+	unsigned int blending;
+	unsigned int alpha;
+	bool alpha_premult;
+
 	/* Clipped coordinates */
 	struct drm_rect src, dst;
 
