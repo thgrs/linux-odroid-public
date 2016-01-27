@@ -110,9 +110,8 @@
  * @supported_rotations: bitmask of supported rotations and reflections
  *
  * This creates a new property with the selected support for transformations.
- * The resulting property should be stored in @rotation_property in
- * &drm_mode_config. It then must be attached to each plane which supports
- * rotations using drm_object_attach_property().
+ * It then must be attached to each plane which supports rotations using
+ * drm_object_attach_property().
  *
  * FIXME: Probably better if the rotation property is created on each plane,
  * like the zpos property. Otherwise it's not possible to allow different
@@ -143,11 +142,15 @@
  * the X and Y axis are within the source rectangle, i.e.  the X/Y axis before
  * rotation. After reflection, the rotation is applied to the image sampled from
  * the source rectangle, before scaling it to fit the destination rectangle.
+ *
+ * Returns:
+ * Zero on success, negative errno on failure.
  */
-struct drm_property *drm_mode_create_rotation_property(struct drm_device *dev,
-						       unsigned int supported_rotations)
+int drm_mode_create_rotation_property(struct drm_device *dev,
+				      unsigned int supported_rotations)
 {
-	static const struct drm_prop_enum_list props[] = {
+	struct drm_property *prop;
+	static const struct drm_prop_enum_list values[] = {
 		{ __builtin_ffs(DRM_ROTATE_0) - 1,   "rotate-0" },
 		{ __builtin_ffs(DRM_ROTATE_90) - 1,  "rotate-90" },
 		{ __builtin_ffs(DRM_ROTATE_180) - 1, "rotate-180" },
@@ -156,9 +159,14 @@ struct drm_property *drm_mode_create_rotation_property(struct drm_device *dev,
 		{ __builtin_ffs(DRM_REFLECT_Y) - 1,  "reflect-y" },
 	};
 
-	return drm_property_create_bitmask(dev, 0, "rotation",
-					   props, ARRAY_SIZE(props),
+	prop = drm_property_create_bitmask(dev, 0, "rotation",
+					   values, ARRAY_SIZE(values),
 					   supported_rotations);
+	if (!prop)
+		return -ENOMEM;
+
+	dev->mode_config.rotation_property = prop;
+	return 0;
 }
 EXPORT_SYMBOL(drm_mode_create_rotation_property);
 

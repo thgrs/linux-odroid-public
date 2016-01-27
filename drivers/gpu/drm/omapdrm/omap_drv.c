@@ -293,8 +293,7 @@ static int omap_modeset_init_properties(struct drm_device *dev)
 	struct omap_drm_private *priv = dev->dev_private;
 
 	if (priv->has_dmm) {
-		dev->mode_config.rotation_property =
-			drm_mode_create_rotation_property(dev,
+		drm_mode_create_rotation_property(dev,
 				DRM_ROTATE_0 | DRM_ROTATE_90 |
 				DRM_ROTATE_180 | DRM_ROTATE_270 |
 				DRM_REFLECT_X | DRM_REFLECT_Y);

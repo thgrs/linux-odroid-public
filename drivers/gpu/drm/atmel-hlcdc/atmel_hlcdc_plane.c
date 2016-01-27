@@ -1054,12 +1054,10 @@ atmel_hlcdc_plane_create_properties(struct drm_device *dev)
 	if (!props->alpha)
 		return ERR_PTR(-ENOMEM);
 
-	dev->mode_config.rotation_property =
-			drm_mode_create_rotation_property(dev,
-							  DRM_ROTATE_0 |
-							  DRM_ROTATE_90 |
-							  DRM_ROTATE_180 |
-							  DRM_ROTATE_270);
+	drm_mode_create_rotation_property(dev, DRM_ROTATE_0 |
+					       DRM_ROTATE_90 |
+					       DRM_ROTATE_180 |
+					       DRM_ROTATE_270);
 	if (!dev->mode_config.rotation_property)
 		return ERR_PTR(-ENOMEM);
 
