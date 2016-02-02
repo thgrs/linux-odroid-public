@@ -3,3 +3,4 @@
 [PATCH v2 0/5] Add runtime PM support for clocks (on Exynos SoC example)
 [PATCH v6 0/5] Functional dependencies between devices
 [PATCH v7 0/7] Exynos IOMMU: proper runtime PM support (use device dependencies)
+[PATCH v5 0/5] drm/exynos: introduce generic zpos and blending properties
