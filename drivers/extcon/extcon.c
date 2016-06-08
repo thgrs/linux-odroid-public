@@ -190,6 +190,18 @@ struct __extcon_info {
 		.name = "MECHANICAL",
 	},
 
+	/* Raw status, useful for USB controllers */
+	[EXTCON_USB_ID] = {
+		.type = EXTCON_TYPE_RAW,
+		.id = EXTCON_USB_ID,
+		.name = "USB-ID",
+	},
+	[EXTCON_USB_VBUS] = {
+		.type = EXTCON_TYPE_RAW,
+		.id = EXTCON_USB_VBUS,
+		.name = "USB-VBUS",
+	},
+
 	{ /* sentinel */ }
 };
 

@@ -36,6 +36,7 @@
 #define EXTCON_TYPE_JACK	BIT(2)	/* Jack connector */
 #define EXTCON_TYPE_DISP	BIT(3)	/* Display connector */
 #define EXTCON_TYPE_MISC	BIT(4)	/* Miscellaneous connector */
+#define EXTCON_TYPE_RAW		BIT(5)	/* Raw status */
 
 /*
  * Define the unique id of supported external connectors
@@ -78,7 +79,11 @@
 #define EXTCON_JIG		61
 #define EXTCON_MECHANICAL	62
 
-#define EXTCON_NUM		63
+/* Raw status, useful for USB controllers */
+#define EXTCON_USB_ID		63
+#define EXTCON_USB_VBUS		64
+
+#define EXTCON_NUM		65
 
 /*
  * Define the property of supported external connectors.
