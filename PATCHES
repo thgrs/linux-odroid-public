@@ -2,3 +2,4 @@
 [PATCH] gpu/mali: integration of r5p0 for Exynos4412/Mali-400MP4
 [PATCH v2 0/5] Add runtime PM support for clocks (on Exynos SoC example)
 [PATCH v6 0/5] Functional dependencies between devices
+[PATCH v7 0/7] Exynos IOMMU: proper runtime PM support (use device dependencies)
