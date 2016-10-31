@@ -147,6 +147,32 @@
 			opp-microvolt = <1150000>;
 		};
 	};
+
+	g3d_opp_prime_table: opp_prime_table3 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@533000000 {
+			opp-hz = /bits/ 64 <533000000>;
+			opp-microvolt = <1075000>;
+		};
+		opp@440000000 {
+			opp-hz = /bits/ 64 <440000000>;
+			opp-microvolt = <1025000>;
+		};
+		opp@350000000 {
+			opp-hz = /bits/ 64 <350000000>;
+			opp-microvolt = <950000>;
+		};
+		opp@266000000 {
+			opp-hz = /bits/ 64 <266000000>;
+			opp-microvolt = <900000>;
+		};
+		opp@160000000 {
+			opp-hz = /bits/ 64 <160000000>;
+			opp-microvolt = <875000>;
+		};
+	};
 };
 
 &cpu0 {
@@ -183,4 +209,8 @@
 
 &bus_mfc {
 	operating-points-v2 = <&bus_leftbus_opp_prime_table>;
+};
+
+&gpu {
+	operating-points-v2 = <&g3d_opp_prime_table>;
 };
