@@ -53,6 +53,11 @@
 	};
 };
 
+&adc {
+	vdd-supply = <&ldo10_reg>;
+	status = "okay";
+};
+
 /* On the Odroid-X/X2 this buck regulator supplies the core of the eMMC. */
 &buck8_reg {
 	regulator-name = "vddf_emmc_2.85V";
