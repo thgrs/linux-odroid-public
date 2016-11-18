@@ -10,3 +10,4 @@
 [PATCH] drm/exynos: g2d: various improvements for the G2D driver
 [PATCH 0/2] Use drm-core helpers to wait for updates
 [RFC PATCH 00/10] ARM: dts: exynos: Fix invalid GIC interrupt flags
+[PATCH 0/4] media: Exynos MFC driver fixes
