@@ -7,3 +7,4 @@
 [PATCH 00/25] Exynos DRM: new life of IPP (Image Post Processing) subsystem
 [PATCH] drm/exynos: g2d: various improvements for the G2D driver
 [RFC PATCH 00/10] ARM: dts: exynos: Fix invalid GIC interrupt flags
+[PATCH 0/4] media: Exynos MFC driver fixes
