@@ -389,6 +389,7 @@ static int exynos_bus_probe(struct platform_device *pdev)
 	struct devfreq_passive_data *passive_data;
 	struct devfreq *parent_devfreq;
 	struct exynos_bus *bus;
+	struct dev_pm_opp *suspend_opp;
 	int ret, max_state;
 	unsigned long min_freq, max_freq;
 
@@ -448,6 +449,13 @@ static int exynos_bus_probe(struct platform_device *pdev)
 		ret = PTR_ERR(bus->devfreq);
 		goto err;
 	}
+
+	/* Check for suspend OPP and store the corresponding frequency. */
+	rcu_read_lock();
+	suspend_opp = dev_pm_opp_get_suspend_opp(dev);
+	if (suspend_opp)
+		bus->devfreq->suspend_freq = dev_pm_opp_get_freq(suspend_opp);
+	rcu_read_unlock();
 
 	/* Register opp_notifier to catch the change of OPP  */
 	ret = devm_devfreq_register_opp_notifier(dev, bus->devfreq);
