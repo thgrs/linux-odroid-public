@@ -30,6 +30,8 @@
 
 enum devfreq_flag_bits {
 	DEVFREQ_BIT_STOP_POLLING,
+	/* Bit set if DevFreq device was suspended in devfreq_suspend_device(). */
+	DEVFREQ_BIT_SUSPENDED,
 };
 
 static struct class *devfreq_class;
@@ -828,14 +830,21 @@ EXPORT_SYMBOL(devfreq_turbo_put);
  */
 int devfreq_suspend_device(struct devfreq *devfreq)
 {
+	int ret;
+
 	if (!devfreq)
 		return -EINVAL;
 
 	if (!devfreq->governor)
 		return 0;
 
-	return devfreq->governor->event_handler(devfreq,
+	ret = devfreq->governor->event_handler(devfreq,
 				DEVFREQ_GOV_SUSPEND, NULL);
+
+	if (ret == 0)
+		__set_bit(DEVFREQ_BIT_SUSPENDED, &devfreq->flags);
+
+	return ret;
 }
 EXPORT_SYMBOL(devfreq_suspend_device);
 
@@ -849,14 +858,21 @@ EXPORT_SYMBOL(devfreq_suspend_device);
  */
 int devfreq_resume_device(struct devfreq *devfreq)
 {
+	int ret;
+
 	if (!devfreq)
 		return -EINVAL;
 
 	if (!devfreq->governor)
 		return 0;
 
-	return devfreq->governor->event_handler(devfreq,
+	ret = devfreq->governor->event_handler(devfreq,
 				DEVFREQ_GOV_RESUME, NULL);
+
+	if (ret == 0)
+		__clear_bit(DEVFREQ_BIT_SUSPENDED, &devfreq->flags);
+
+	return ret;
 }
 EXPORT_SYMBOL(devfreq_resume_device);
 
