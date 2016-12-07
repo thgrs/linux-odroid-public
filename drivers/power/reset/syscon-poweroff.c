@@ -25,13 +25,18 @@
 #include <linux/platform_device.h>
 #include <linux/pm.h>
 #include <linux/regmap.h>
+#include <linux/regulator/consumer.h>
 
 static struct regmap *map;
 static u32 offset;
 static u32 mask;
+struct regulator *regulator;
 
 static void syscon_poweroff(void)
 {
+	if (regulator)
+		regulator_force_disable(regulator);
+
 	/* Issue the poweroff */
 	regmap_write(map, offset, mask);
 
@@ -59,6 +64,8 @@ static int syscon_poweroff_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "unable to read 'mask'");
 		return -EINVAL;
 	}
+
+	regulator = regulator_get_optional(&pdev->dev, "vdd");
 
 	if (pm_power_off) {
 		lookup_symbol_name((ulong)pm_power_off, symname);
