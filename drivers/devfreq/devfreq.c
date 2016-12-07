@@ -28,6 +28,10 @@
 #include <linux/of.h>
 #include "governor.h"
 
+enum devfreq_flag_bits {
+	DEVFREQ_BIT_STOP_POLLING,
+};
+
 static struct class *devfreq_class;
 
 /*
@@ -367,13 +371,13 @@ EXPORT_SYMBOL(devfreq_monitor_stop);
 void devfreq_monitor_suspend(struct devfreq *devfreq)
 {
 	mutex_lock(&devfreq->lock);
-	if (devfreq->stop_polling) {
+	if (test_bit(DEVFREQ_BIT_STOP_POLLING, &devfreq->flags)) {
 		mutex_unlock(&devfreq->lock);
 		return;
 	}
 
 	devfreq_update_status(devfreq, devfreq->previous_freq);
-	devfreq->stop_polling = true;
+	__set_bit(DEVFREQ_BIT_STOP_POLLING, &devfreq->flags);
 	mutex_unlock(&devfreq->lock);
 	cancel_delayed_work_sync(&devfreq->work);
 }
@@ -392,7 +396,7 @@ void devfreq_monitor_resume(struct devfreq *devfreq)
 	unsigned long freq;
 
 	mutex_lock(&devfreq->lock);
-	if (!devfreq->stop_polling)
+	if (!test_bit(DEVFREQ_BIT_STOP_POLLING, &devfreq->flags))
 		goto out;
 
 	if (!delayed_work_pending(&devfreq->work) &&
@@ -401,7 +405,7 @@ void devfreq_monitor_resume(struct devfreq *devfreq)
 			msecs_to_jiffies(devfreq->profile->polling_ms));
 
 	devfreq->last_stat_updated = jiffies;
-	devfreq->stop_polling = false;
+	__clear_bit(DEVFREQ_BIT_STOP_POLLING, &devfreq->flags);
 
 	if (devfreq->profile->get_cur_freq &&
 		!devfreq->profile->get_cur_freq(devfreq->dev.parent, &freq))
@@ -428,7 +432,7 @@ void devfreq_interval_update(struct devfreq *devfreq, unsigned int *delay)
 	mutex_lock(&devfreq->lock);
 	devfreq->profile->polling_ms = new_delay;
 
-	if (devfreq->stop_polling)
+	if (test_bit(DEVFREQ_BIT_STOP_POLLING, &devfreq->flags))
 		goto out;
 
 	/* if new delay is zero, stop polling */
@@ -450,7 +454,7 @@ void devfreq_interval_update(struct devfreq *devfreq, unsigned int *delay)
 		mutex_unlock(&devfreq->lock);
 		cancel_delayed_work_sync(&devfreq->work);
 		mutex_lock(&devfreq->lock);
-		if (!devfreq->stop_polling)
+		if (!test_bit(DEVFREQ_BIT_STOP_POLLING, &devfreq->flags))
 			queue_delayed_work(devfreq_wq, &devfreq->work,
 			      msecs_to_jiffies(devfreq->profile->polling_ms));
 	}
@@ -1232,7 +1236,7 @@ static ssize_t trans_stat_show(struct device *dev,
 	int i, j;
 	unsigned int max_state = devfreq->profile->max_state;
 
-	if (!devfreq->stop_polling &&
+	if (!test_bit(DEVFREQ_BIT_STOP_POLLING, &devfreq->flags) &&
 			devfreq_update_status(devfreq, devfreq->previous_freq))
 		return 0;
 	if (max_state == 0)
