@@ -707,3 +707,7 @@
 &watchdog {
 	status = "okay";
 };
+
+&reboot {
+	vdd-supply = <&reg_p3v3>;
+};
