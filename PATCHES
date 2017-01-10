@@ -9,3 +9,4 @@
 [RFC PATCH 00/10] ARM: dts: exynos: Fix invalid GIC interrupt flags
 [PATCH 0/4] media: Exynos MFC driver fixes
 [PATCH 0/9] media: Exynos MFC driver improvements
+[RFC v4 0/7] extcon: usb-gpio: fixes and improvements
