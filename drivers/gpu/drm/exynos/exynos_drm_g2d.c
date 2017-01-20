@@ -1538,7 +1538,7 @@ static irqreturn_t g2d_irq_handler(int irq, void *dev_id)
 	if (pending)
 		g2d_reg_write(g2d, G2D_INTC_PEND, pending);
 
-#ifdef G2D_DEBUG_ENABLED
+#if !defined(G2D_DEBUG_DISABLED)
 	printk("g2d-irq: 0x%x\n", pending);
 	printk("g2d-irq: list_num = %u\n", g2d_reg_read(g2d, G2D_DMA_EXE_LIST_NUM));
 #endif
@@ -2055,77 +2055,38 @@ static void __maybe_unused g2d_bad_cmdlist(struct g2d_cmdlist_node *node)
 	struct g2d_cmdlist *cmdlist = node->cmdlist;
 
 	const unsigned int bufsize = 8 * 8;
-	const unsigned int loopsize = 3;
-	const unsigned int xor_rop3 = 0xCC ^ 0xAA;
-
-	unsigned int i;
-	dma_addr_t dma_addr[2], jumppos[2];
-	unsigned long *buf[2];
+	dma_addr_t dma_addr[2];
 
 	printk("DEBUG: node = 0x%lx\n", (unsigned long)node->dma_addr);
-	printk("DEBUG: available = %u\n", G2D_CMDLIST_DATA_NUM);
+	printk("DEBUG: available = %lu\n", G2D_CMDLIST_DATA_NUM);
 
 	dma_addr[0] = node->dma_addr + 4 + (G2D_CMDLIST_DATA_NUM - bufsize) * 4;
-	dma_addr[1] = node->dma_addr + 4 + (G2D_CMDLIST_DATA_NUM - 2*bufsize) * 4;
-	buf[0] = &cmdlist->data[G2D_CMDLIST_DATA_NUM - bufsize];
-	buf[1] = &cmdlist->data[G2D_CMDLIST_DATA_NUM - 2 * bufsize];
+	dma_addr[1] = node->dma_addr + 4 + (G2D_CMDLIST_DATA_NUM - 2 * bufsize) * 4;
 
 	printk("DEBUG: buf = 0x%lx, 0x%lx\n", (unsigned long)dma_addr[0], (unsigned long)dma_addr[1]);
 
-	for (i = 0; i < bufsize; ++i) {
-		buf[0][i] = get_random_long();
-		buf[1][i] = get_random_long();
-	}
+	/* destination buffer configuration */
+	g2d_add_cmd(cmdlist, G2D_DST_STRIDE, 8);
+	g2d_add_cmd(cmdlist, G2D_DST_COLOR_MODE, G2D_FMT_YCbCr422);
+	g2d_add_cmd(cmdlist, G2D_DST_LEFT_TOP, 1 | (2 << 16));
+	g2d_add_cmd(cmdlist, G2D_DST_RIGHT_BOTTOM, 6 | (7 << 16));
 
-	//g2d_add_cmd(cmdlist, G2D_INTEN, G2D_INTEN_ACF | G2D_INTEN_UCF);
-	//g2d_add_cmd(cmdlist, G2D_INTEN, G2D_INTEN_ACF);
-	//g2d_add_cmd(cmdlist, G2D_DMA_HOLD_CMD, G2D_USER_HOLD);
+	/* source buffer configuration */
+	g2d_add_cmd(cmdlist, G2D_SRC_STRIDE, 8);
+	g2d_add_cmd(cmdlist, G2D_SRC_COLOR_MODE, G2D_FMT_YCbCr422);
+	g2d_add_cmd(cmdlist, G2D_SRC_LEFT_TOP, 2 | (3 << 16));
+	g2d_add_cmd(cmdlist, G2D_SRC_RIGHT_BOTTOM, 7 | (8 << 16));
 
-	/* buffer configuration */
-	g2d_add_cmd(cmdlist, G2D_SRC_STRIDE, 8 * 4);
-	g2d_add_cmd(cmdlist, G2D_DST_STRIDE, 8 * 4);
-	g2d_add_cmd(cmdlist, G2D_SRC_COLOR_MODE, G2D_FMT_MAX);
-	g2d_add_cmd(cmdlist, G2D_DST_COLOR_MODE, G2D_FMT_MAX);
-	g2d_add_cmd(cmdlist, G2D_SRC_RIGHT_BOTTOM, 8 | (8 << 16));
-	g2d_add_cmd(cmdlist, G2D_DST_RIGHT_BOTTOM, 8 | (8 << 16));
+	/* select configuration */
+	g2d_add_cmd(cmdlist, G2D_SRC_SELECT, 0x0);
+	g2d_add_cmd(cmdlist, G2D_DST_SELECT, 0x2);
 
-	/* setup src XOR dst operation */
-	g2d_add_cmd(cmdlist, G2D_ROP4, xor_rop3 | (xor_rop3 << 8));
+	g2d_add_cmd(cmdlist, G2D_ROP4, 0xEE | (0x88 << 8));
+	g2d_add_cmd(cmdlist, G2D_BITBLT_COMMAND, 0x1 << 2);
 
-	/* enable alpha ROP */
-	g2d_add_cmd(cmdlist, G2D_BITBLT_COMMAND, 1 << 2),
-
-	g2d_add_cmd(cmdlist, G2D_SRC_BASE_ADDR, (unsigned long)dma_addr[1]);
 	g2d_add_cmd(cmdlist, G2D_DST_BASE_ADDR, (unsigned long)dma_addr[0]);
-	g2d_add_cmd(cmdlist, G2D_BITBLT_START, G2D_START_BITBLT);
-
-	cmdlist->head = cmdlist->last / 2;
-	jumppos[0] = node->dma_addr + 4 + (cmdlist->last + 1) * 4;
-
-	cmdlist->data[cmdlist->last++] = (unsigned long)jumppos[0];
-	cmdlist->data[cmdlist->last++] = loopsize;
-
-	//g2d_add_cmd(cmdlist, G2D_DMA_HOLD_CMD, G2D_USER_HOLD);
-	g2d_add_cmd(cmdlist, G2D_SRC_BASE_ADDR, (unsigned long)dma_addr[0]);
-	g2d_add_cmd(cmdlist, G2D_DST_BASE_ADDR, (unsigned long)dma_addr[1]);
-	g2d_add_cmd(cmdlist, G2D_BITBLT_START, G2D_START_BITBLT);
-
-	jumppos[1] = node->dma_addr + 4 + (cmdlist->last + 1) * 4;
-
-	cmdlist->data[cmdlist->last++] = (unsigned long)jumppos[1];
-	cmdlist->data[cmdlist->last++] = loopsize;
-
-	//g2d_add_cmd(cmdlist, G2D_DMA_HOLD_CMD, G2D_USER_HOLD);
 	g2d_add_cmd(cmdlist, G2D_SRC_BASE_ADDR, (unsigned long)dma_addr[1]);
-	g2d_add_cmd(cmdlist, G2D_DST_BASE_ADDR, (unsigned long)dma_addr[0]);
 	g2d_add_cmd(cmdlist, G2D_BITBLT_START, G2D_START_BITBLT);
-
-	cmdlist->data[cmdlist->last] = (unsigned long)jumppos[0];
-
-	// protect against subsequent cmdlists
-	cmdlist->last++;
-
-	printk("DEBUG: jump = 0x%lx, 0x%lx\n", (unsigned long)jumppos[0], (unsigned long)jumppos[1]);
 }
 
 /* ioctl functions */
@@ -2201,7 +2162,7 @@ int exynos_g2d_set_cmdlist2_ioctl(struct drm_device *drm_dev, void *data,
 	cmdlist = node->cmdlist;
 	g2d_cmdlist_prolog(cmdlist, event);
 
-#ifdef G2D_DEBUG_ENABLED
+#if !defined(G2D_DEBUG_DISABLED)
 	/* G2D engine hangtest */
 	if (req->flags & 0x1) {
 		g2d_bad_cmdlist(node);
@@ -2274,13 +2235,13 @@ int exynos_g2d_set_cmdlist2_ioctl(struct drm_device *drm_dev, void *data,
 		goto err_unmap;
 	}
 
+out:
 	/* head */
 	cmdlist->head = cmdlist->last / 2;
 
 	/* tail */
 	cmdlist->data[cmdlist->last] = 0;
 
-out:
 	if (event) {
 		struct drm_exynos_pending_g2d_event *e;
 
